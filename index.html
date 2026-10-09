@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Příprava testu</title>
+    <style>
+        /* Moderní vzhled a vycentrování na střed stránky */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1, h2 {
+            color: #333333;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            color: #555555;
+        }
+
+        .setup-input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 20px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .setup-input:focus {
+            border-color: #0066cc;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #004c99;
+        }
+
+        #quiz-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. KROK: Identifikace žáka -->
+    <div id="setup-card" class="card">
+        <h1>Příprava testu</h1>
+        <label for="student-name"><strong>Jméno a příjmení žáka:</strong></label>
+        <input type="text" id="student-name" class="setup-input" placeholder="Např. Jan Novák">
+        <button id="start-btn">Spustit test</button>
+    </div>
+
+    <!-- Místo pro zobrazení zamíchaných otázek -->
+    <div id="quiz-container" style="display:none;"></div>
+
+<script>
+document.getElementById('start-btn').addEventListener('click', async function() {
+    const studentName = document.getElementById('student-name').value.trim();
+    if (!studentName) {
+        alert('Prosím, zadejte jméno žáka.');
+        return;
+    }
+
+    try {
+        // Načtení souboru ze stejné složky
+        const response = await fetch('otazky.txt');
+        if (!response.ok) throw new Error(`Soubor otazky.txt nebyl nalezen.`);
+        
+        const textObsah = await response.text();
+        
+        // 1. Zpracování textu (OPRAVENO)
+        let otazky = zpracujStrednikovyFormat(textObsah);
+        
+        if (otazky.length === 0) {
+            alert("V souboru otazky.txt nebyly nalezeny žádné platné otázky.");
+            return;
+        }
+        
+        // 2. Zamíchání pořadí OTÁZEK
+        zamichajPole(otazky);
+        
+        // 3. Zamíchání ODPOVĚDÍ uvnitř každé otázky
+        otazky.forEach(otazka => {
+            zamichajPole(otazka.odpovedi);
+        });
+
+        // 4. Spuštění testu
+        spustitTest(studentName, otazky);
+
+    } catch (chyba) {
+        alert("Chyba: " + chyba.message + "\nUjistěte se, že test běží na serveru (Live Server) nebo na GitHubu a soubor otazky.txt existuje.");
+        console.error(chyba);
+    }
+});
+
+// Algoritmus pro náhodné zamíchání pole
+function zamichajPole(pole) {
+    for (let i = pole.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pole[i], pole[j]] = [pole[j], pole[i]];
+    }
+}
+
+// Zpracování formátu: Otázka;OdpověďA;OdpověďB;OdpověďC;SprávnéPísmeno
+function zpracujStrednikovyFormat(text) {
+    const radky = text.split('\n');
+    const vysledneOtazky = [];
+
+    radky.forEach(radek => {
+        const upravenyRadek = radek.trim();
+        if (!upravenyRadek) return; // Přeskočit prázdné řádky
+
+        const casti = upravenyRadek.split(';').map(c => c.trim());
+        
+        // Kontrola správného počtu prvků (Otázka + 3 odpovědi + 1 písmeno = 5 částí)
+        if (casti.length < 5) return;
+
+        const textOtazky = casti[0];
+        const odpovedA = casti[1];
+        const odpovedB = casti[2];
+        const odpovedC = casti[3];
+        const spravnePismeno = casti[4].toUpperCase();
+
+        const odpovedi = [
+            { text: odpovedA, spravna: spravnePismeno === 'A' },
+            { text: odpovedB, spravna: spravnePismeno === 'B' },
+            { text: odpovedC, spravna: spravnePismeno === 'C' }
+        ];
+
+        vysledneOtazky.push({
+            otazka: textOtazky,
+            odpovedi: odpovedi
+        });
+    });
+
+    return vysledneOtazky;
+}
+
+function spustitTest(jmeno, zamichaneOtazky) {
+    // Skryjeme úvodní kartu a zobrazíme prostor pro kvíz
+    document.getElementById('setup-card').style.display = 'none';
+    const container = document.getElementById('quiz-container');
+    container.style.display = 'block';
+    
+    console.log("Úspěšně zamíchané otázky:", zamichaneOtazky);
+    
+    container.innerHTML = `
+        <h2>Žák: ${jmeno}</h2>
+        <p style="color: green; font-weight: bold;">✓ Otázky byly úspěšně načteny ze složky a kompletně promíchány!</p>
+        <p>Stiskněte F12 a v záložce "Console" uvidíte strukturu zamíchaných dat.</p>
+    `;
+}
+</script>
+</body>
+</html>
