@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Příprava testu</title>
     <style>
-        /* Moderní vzhled a vycentrování na střed stránky */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            box-sizing: border-box;
         }
 
         .card {
@@ -51,11 +51,6 @@
             font-size: 16px;
         }
 
-        .setup-input:focus {
-            border-color: #0066cc;
-            outline: none;
-        }
-
         button {
             width: 100%;
             background-color: #0066cc;
@@ -82,6 +77,50 @@
             max-width: 600px;
             box-sizing: border-box;
         }
+
+        /* Nové styly pro otázky v testu */
+        .otazka-blok {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eeeeee;
+            text-align: left;
+        }
+
+        .otazka-text {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .moznost-label {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 5px 0;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .moznost-label:hover {
+            background-color: #e9ecef;
+        }
+
+        .moznost-label input {
+            margin-right: 10px;
+        }
+
+        .vysledek-box {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -94,10 +133,13 @@
         <button id="start-btn">Spustit test</button>
     </div>
 
-    <!-- Místo pro zobrazení zamíchaných otázek -->
+    <!-- Místo pro zobrazení testu -->
     <div id="quiz-container" style="display:none;"></div>
 
 <script>
+// Globální proměnná pro uložení načtených otázek
+let globalniOtazky = [];
+
 document.getElementById('start-btn').addEventListener('click', async function() {
     const studentName = document.getElementById('student-name').value.trim();
     if (!studentName) {
@@ -106,13 +148,10 @@ document.getElementById('start-btn').addEventListener('click', async function() 
     }
 
     try {
-        // Načtení souboru ze stejné složky
         const response = await fetch('otazky.txt');
         if (!response.ok) throw new Error(`Soubor otazky.txt nebyl nalezen.`);
         
         const textObsah = await response.text();
-        
-        // 1. Zpracování textu (OPRAVENO)
         let otazky = zpracujStrednikovyFormat(textObsah);
         
         if (otazky.length === 0) {
@@ -120,24 +159,19 @@ document.getElementById('start-btn').addEventListener('click', async function() 
             return;
         }
         
-        // 2. Zamíchání pořadí OTÁZEK
+        // Zamíchání otázek i odpovědí
         zamichajPole(otazky);
-        
-        // 3. Zamíchání ODPOVĚDÍ uvnitř každé otázky
-        otazky.forEach(otazka => {
-            zamichajPole(otazka.odpovedi);
-        });
+        otazky.forEach(otazka => zamichajPole(otazka.odpovedi));
 
-        // 4. Spuštění testu
+        globalniOtazky = otazky; // Uložíme pro pozdější vyhodnocení
         spustitTest(studentName, otazky);
 
     } catch (chyba) {
-        alert("Chyba: " + chyba.message + "\nUjistěte se, že test běží na serveru (Live Server) nebo na GitHubu a soubor otazky.txt existuje.");
+        alert("Chyba: " + chyba.message);
         console.error(chyba);
     }
 });
 
-// Algoritmus pro náhodné zamíchání pole
 function zamichajPole(pole) {
     for (let i = pole.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -145,18 +179,15 @@ function zamichajPole(pole) {
     }
 }
 
-// Zpracování formátu: Otázka;OdpověďA;OdpověďB;OdpověďC;SprávnéPísmeno
 function zpracujStrednikovyFormat(text) {
     const radky = text.split('\n');
     const vysledneOtazky = [];
 
     radky.forEach(radek => {
         const upravenyRadek = radek.trim();
-        if (!upravenyRadek) return; // Přeskočit prázdné řádky
+        if (!upravenyRadek) return;
 
         const casti = upravenyRadek.split(';').map(c => c.trim());
-        
-        // Kontrola správného počtu prvků (Otázka + 3 odpovědi + 1 písmeno = 5 částí)
         if (casti.length < 5) return;
 
         const textOtazky = casti[0];
@@ -180,18 +211,72 @@ function zpracujStrednikovyFormat(text) {
     return vysledneOtazky;
 }
 
+// Funkce, která vykreslí test na obrazovku
 function spustitTest(jmeno, zamichaneOtazky) {
-    // Skryjeme úvodní kartu a zobrazíme prostor pro kvíz
     document.getElementById('setup-card').style.display = 'none';
     const container = document.getElementById('quiz-container');
     container.style.display = 'block';
     
-    console.log("Úspěšně zamíchané otázky:", zamichaneOtazky);
+    let htmlObsah = `<h2>Žák: ${jmeno}</h2><form id="test-form">`;
     
-    container.innerHTML = `
-        <h2>Žák: ${jmeno}</h2>
-        <p style="color: green; font-weight: bold;">✓ Otázky byly úspěšně načteny ze složky a kompletně promíchány!</p>
-        <p>Stiskněte F12 a v záložce "Console" uvidíte strukturu zamíchaných dat.</p>
+    zamichaneOtazky.forEach((polozka, indexOtazky) => {
+        htmlObsah += `
+            <div class="otazka-blok">
+                <div class="otazka-text">${indexOtazky + 1}. ${polozka.otazka}</div>
+        `;
+        
+        polozka.odpovedi.forEach((odpoved, indexOdpovedi) => {
+            htmlObsah += `
+                <label class="moznost-label">
+                    <input type="radio" name="otazka-${indexOtazky}" value="${indexOdpovedi}" required>
+                    ${odpoved.text}
+                </label>
+            `;
+        });
+        
+        htmlObsah += `</div>`;
+    });
+    
+    htmlObsah += `<button type="submit" id="submit-btn">Odevzdat test</button></form>`;
+    htmlObsah += `<div id="vysledek-vystup"></div>`;
+    
+    container.innerHTML = htmlObsah;
+
+    // Odchycení odevzdání formuláře
+    document.getElementById('test-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        vyhodnotTest();
+    });
+}
+
+// Funkce pro spočítání bodů
+function vyhodnotTest() {
+    let body = 0;
+    const celkemOtazek = globalniOtazky.length;
+
+    globalniOtazky.forEach((polozka, indexOtazky) => {
+        const zvolenaMoznost = document.querySelector(`input[name="otazka-${indexOtazky}"]:checked`);
+        
+        if (zvolenaMoznost) {
+            const indexOdpovedi = parseInt(zvolenaMoznost.value);
+            // Zkontrolujeme, zda zaškrtnutá odpověď byla označená jako správná
+            if (polozka.odpovedi[indexOdpovedi].spravna) {
+                body++;
+            }
+        }
+    });
+
+    // Skryjeme tlačítko odevzdat, aby nešlo klikat znovu
+    document.getElementById('submit-btn').style.display = 'none';
+
+    // Zobrazení výsledků
+    const procenta = Math.round((body / celkemOtazek) * 100);
+    const vystup = document.getElementById('vysledek-vystup');
+    
+    vystup.innerHTML = `
+        <div class="vysledek-box" style="background-color: ${procenta >= 50 ? '#d4edda' : '#f8d7da'}; color: ${procenta >= 50 ? '#155724' : '#721c24'};">
+            Výsledek: ${body} z ${celkemOtazek} bodů (${procenta} %)
+        </div>
     `;
 }
 </script>
