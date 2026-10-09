@@ -137,8 +137,17 @@
     <div id="quiz-container" style="display:none;"></div>
 
 <script>
-// Globální proměnná pro uložení načtených otázek
+// ================= KONFIGURACE TESTU =================
+const CAS_NA_OTAZKU_SEKUNDY = 20; // 20 sekund na každou otázku
+// =====================================================
+
 let globalniOtazky = [];
+let aktualniIndex = 0;
+let jmenoZaka = "";
+let odpovediZaka = [];
+
+let zbyvajiciCasOtazky = CAS_NA_OTAZKU_SEKUNDY;
+let casovacInterval = null;
 
 document.getElementById('start-btn').addEventListener('click', async function() {
     const studentName = document.getElementById('student-name').value.trim();
@@ -159,12 +168,21 @@ document.getElementById('start-btn').addEventListener('click', async function() 
             return;
         }
         
-        // Zamíchání otázek i odpovědí
+        // Kompletní zamíchání otázek i odpovědí
         zamichajPole(otazky);
         otazky.forEach(otazka => zamichajPole(otazka.odpovedi));
 
-        globalniOtazky = otazky; // Uložíme pro pozdější vyhodnocení
-        spustitTest(studentName, otazky);
+        // Inicializace stavu testu
+        globalniOtazky = otazky;
+        jmenoZaka = studentName;
+        aktualniIndex = 0;
+        odpovediZaka = new Array(otazky.length).fill(null);
+
+        document.getElementById('setup-card').style.display = 'none';
+        document.getElementById('quiz-container').style.display = 'block';
+
+        // Zobrazení první otázky a spuštění odpočtu
+        zobrazAktualniOtazku();
 
     } catch (chyba) {
         alert("Chyba: " + chyba.message);
@@ -190,11 +208,11 @@ function zpracujStrednikovyFormat(text) {
         const casti = upravenyRadek.split(';').map(c => c.trim());
         if (casti.length < 5) return;
 
-        const textOtazky = casti[0];
-        const odpovedA = casti[1];
-        const odpovedB = casti[2];
-        const odpovedC = casti[3];
-        const spravnePismeno = casti[4].toUpperCase();
+        const textOtazky = casti;
+        const odpovedA = casti;
+        const odpovedB = casti;
+        const odpovedC = casti;
+        const spravnePismeno = casti.toUpperCase();
 
         const odpovedi = [
             { text: odpovedA, spravna: spravnePismeno === 'A' },
@@ -202,80 +220,132 @@ function zpracujStrednikovyFormat(text) {
             { text: odpovedC, spravna: spravnePismeno === 'C' }
         ];
 
-        vysledneOtazky.push({
-            otazka: textOtazky,
-            odpovedi: odpovedi
-        });
+        vysledneOtazky.push({ otazka: textOtazky, odpovedi: odpovedi });
     });
 
     return vysledneOtazky;
 }
 
-// Funkce, která vykreslí test na obrazovku
-function spustitTest(jmeno, zamichaneOtazky) {
-    document.getElementById('setup-card').style.display = 'none';
+// Nastartování odpočtu pro konkrétní otázku
+function spustCasovacOtazky() {
+    if (casovacInterval) clearInterval(casovacInterval);
+    
+    zbyvajiciCasOtazky = CAS_NA_OTAZKU_SEKUNDY;
+    
+    casovacInterval = setInterval(() => {
+        zbyvajiciCasOtazky--;
+
+        const elementCasu = document.getElementById('timer-display');
+        if (elementCasu) {
+            elementCasu.innerText = zbyvajiciCasOtazky + "s";
+            
+            // Varování, když zbývá méně než 5 sekund
+            if (zbyvajiciCasOtazky <= 5) {
+                elementCasu.style.color = 'red';
+                elementCasu.style.fontWeight = 'bold';
+            }
+        }
+
+        // Čas na otázku vypršel
+        if (zbyvajiciCasOtazky <= 0) {
+            clearInterval(casovacInterval);
+            posunNaDalsiNeboKonec(true); // Parametr true znamená, že vypršel čas
+        }
+    }, 1000);
+}
+
+function zobrazAktualniOtazku() {
     const container = document.getElementById('quiz-container');
-    container.style.display = 'block';
-    
-    let htmlObsah = `<h2>Žák: ${jmeno}</h2><form id="test-form">`;
-    
-    zamichaneOtazky.forEach((polozka, indexOtazky) => {
+    const polozka = globalniOtazky[aktualniIndex];
+    const jePosledni = aktualniIndex === globalniOtazky.length - 1;
+
+    let htmlObsah = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #666; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <span><strong>Žák:</strong> ${jmenoZaka}</span>
+            <span><strong>Čas na otázku:</strong> <span id="timer-display">${zbyvajiciCasOtazky}s</span></span>
+            <span><strong>Otázka:</strong> ${aktualniIndex + 1} z ${globalniOtazky.length}</span>
+        </div>
+        
+        <div class="otazka-blok" style="border-bottom: none; margin-bottom: 15px;">
+            <div class="otazka-text">${polozka.otazka}</div>
+    `;
+
+    polozka.odpovedi.forEach((odpoved, indexOdpovedi) => {
         htmlObsah += `
-            <div class="otazka-blok">
-                <div class="otazka-text">${indexOtazky + 1}. ${polozka.otazka}</div>
+            <label class="moznost-label">
+                <input type="radio" name="aktualni-otazka" value="${indexOdpovedi}">
+                ${odpoved.text}
+            </label>
         `;
-        
-        polozka.odpovedi.forEach((odpoved, indexOdpovedi) => {
-            htmlObsah += `
-                <label class="moznost-label">
-                    <input type="radio" name="otazka-${indexOtazky}" value="${indexOdpovedi}" required>
-                    ${odpoved.text}
-                </label>
-            `;
-        });
-        
-        htmlObsah += `</div>`;
     });
+
+    htmlObsah += `</div>`;
     
-    htmlObsah += `<button type="submit" id="submit-btn">Odevzdat test</button></form>`;
-    htmlObsah += `<div id="vysledek-vystup"></div>`;
-    
+    if (jePosledni) {
+        htmlObsah += `<button id="next-btn">Ukončit a vyhodnotit test</button>`;
+    } else {
+        htmlObsah += `<button id="next-btn">Potvrdit a další otázka</button>`;
+    }
+
     container.innerHTML = htmlObsah;
 
-    // Odchycení odevzdání formuláře
-    document.getElementById('test-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        vyhodnotTest();
+    // Spustíme odpočet na 20 sekund hned po vykreslení otázky
+    spustCasovacOtazky();
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        const zvolenaMoznost = document.querySelector('input[name="aktualni-otazka"]:checked');
+        
+        if (!zvolenaMoznost) {
+            alert("Prosím, vyberte jednu z odpovědí.");
+            return;
+        }
+
+        // Žák odpověděl včas, uložíme jeho volbu
+        odpovediZaka[aktualniIndex] = parseInt(zvolenaMoznost.value);
+        
+        clearInterval(casovacInterval);
+        posunNaDalsiNeboKonec(false);
     });
 }
 
-// Funkce pro spočítání bodů
-function vyhodnotTest() {
+// Logika pro přechod nebo ukončení testu
+function posunNaDalsiNeboKonec(vyprselCas) {
+    const jePosledni = aktualniIndex === globalniOtazky.length - 1;
+
+    if (vyprselCas) {
+        // Pokud vypršel čas, uložíme hodnotu null (žádná odpověď)
+        odpovediZaka[aktualniIndex] = null;
+    }
+
+    if (jePosledni) {
+        vyhodnotKonecnyTest();
+    } else {
+        aktualniIndex++;
+        zobrazAktualniOtazku();
+    }
+}
+
+function vyhodnotKonecnyTest() {
+    if (casovacInterval) clearInterval(casovacInterval);
+
     let body = 0;
     const celkemOtazek = globalniOtazky.length;
 
-    globalniOtazky.forEach((polozka, indexOtazky) => {
-        const zvolenaMoznost = document.querySelector(`input[name="otazka-${indexOtazky}"]:checked`);
-        
-        if (zvolenaMoznost) {
-            const indexOdpovedi = parseInt(zvolenaMoznost.value);
-            // Zkontrolujeme, zda zaškrtnutá odpověď byla označená jako správná
-            if (polozka.odpovedi[indexOdpovedi].spravna) {
-                body++;
-            }
+    globalniOtazky.forEach((polozka, i) => {
+        const indexVolby = odpovediZaka[i];
+        if (indexVolby !== null && polozka.odpovedi[indexVolby].spravna) {
+            body++;
         }
     });
 
-    // Skryjeme tlačítko odevzdat, aby nešlo klikat znovu
-    document.getElementById('submit-btn').style.display = 'none';
-
-    // Zobrazení výsledků
     const procenta = Math.round((body / celkemOtazek) * 100);
-    const vystup = document.getElementById('vysledek-vystup');
+    const container = document.getElementById('quiz-container');
     
-    vystup.innerHTML = `
-        <div class="vysledek-box" style="background-color: ${procenta >= 50 ? '#d4edda' : '#f8d7da'}; color: ${procenta >= 50 ? '#155724' : '#721c24'};">
-            Výsledek: ${body} z ${celkemOtazek} bodů (${procenta} %)
+    container.innerHTML = `
+        <h2>Výsledky testu</h2>
+        <p><strong>Žák:</strong> ${jmenoZaka}</p>
+        <div class="vysledek-box" style="background-color: ${procenta >= 50 ? '#d4edda' : '#f8d7da'}; color: ${procenta >= 50 ? '#155724' : '#721c24'}; margin-top: 20px;">
+            Dosaženo: ${body} z ${celkemOtazek} bodů (${procenta} %)
         </div>
     `;
 }
