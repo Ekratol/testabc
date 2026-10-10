@@ -179,7 +179,6 @@
     <div id="dynamic-form-fields"></div>
 </form>
 
-<script>
 let quizData = [];
 let currentIdx = 0;
 let score = 0;
@@ -188,7 +187,6 @@ let timeLeft = 20;
 let studentName = "";
 let studentReport = [];
 
-// Funkce pro náhodné zamíchání pole (Fisher-Yates)
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -197,7 +195,6 @@ function shuffle(array) {
     return array;
 }
 
-// Načtení otázek ze souboru otazky.txt ve stejné složce
 async function loadQuestions() {
     try {
         const response = await fetch('otazky.txt');
@@ -221,14 +218,12 @@ async function loadQuestions() {
             }
         });
 
-        // Zamíchání otázek na začátku
         shuffle(quizData);
     } catch (error) {
         alert('Chyba při načítání otázek: ' + error.message);
     }
 }
 
-// Spuštění testu po zadání jména
 async function startQuiz() {
     const nameInput = document.getElementById('student-name').value.trim();
     if (!nameInput) {
@@ -258,7 +253,6 @@ function showQuestion() {
         return;
     }
 
-    // Reset výběru
     const radios = document.getElementsByName('quiz-choice');
     radios.forEach(r => r.checked = false);
 
@@ -270,7 +264,6 @@ function showQuestion() {
     document.getElementById('labelB').innerText = `B) ${q.b}`;
     document.getElementById('labelC').innerText = `C) ${q.c}`;
 
-    // Spuštění časovače na 20 sekund
     timeLeft = 20;
     document.getElementById('time-left').innerText = timeLeft;
     
@@ -284,20 +277,23 @@ function showQuestion() {
     }, 1000);
 }
 
-// Vypršení časového limitu
 function handleTimeout() {
     const q = quizData[currentIdx];
+    
+    // Zjistíme text správné odpovědi
+    let correctText = q.correct === 'A' ? q.a : (q.correct === 'B' ? q.b : q.c);
+
     studentReport.push({
         question: q.question,
         userAnswer: "Vypršel čas",
-        correctAnswer: q.correct,
+        correctAnswer: correctText,
+        timeSpent: "20 s",
         status: "timeout"
     });
     currentIdx++;
     showQuestion();
 }
 
-// Potvrzení vybrané odpovědi žákem
 function submitAnswer() {
     const selected = document.querySelector('input[name="quiz-choice"]:checked');
     if (!selected) {
@@ -307,15 +303,23 @@ function submitAnswer() {
 
     clearInterval(timerInterval);
     const q = quizData[currentIdx];
-    const answerValue = selected.value; // A, B nebo C
+    const answerLetter = selected.value; // A, B, C
+    
+    // Spočítáme spotřebovaný čas (20 - zbývající čas)
+    let timeSpent = (20 - timeLeft) + " s";
 
-    let isCorrect = (answerValue === q.correct);
+    // Převedeme písmena na konkrétní texty odpovědí
+    let userText = answerLetter === 'A' ? q.a : (answerLetter === 'B' ? q.b : q.c);
+    let correctText = q.correct === 'A' ? q.a : (q.correct === 'B' ? q.b : q.c);
+
+    let isCorrect = (answerLetter === q.correct);
     if (isCorrect) score++;
 
     studentReport.push({
         question: q.question,
-        userAnswer: answerValue,
-        correctAnswer: q.correct,
+        userAnswer: userText,
+        correctAnswer: correctText,
+        timeSpent: timeSpent,
         status: isCorrect ? "correct" : "wrong"
     });
 
@@ -330,21 +334,31 @@ function finishQuiz() {
     const percentage = Math.round((score / quizData.length) * 100);
     document.getElementById('summary-text').innerHTML = `Žák: <strong>${studentName}</strong><br>Skóre: <strong>${score} z ${quizData.length}</strong> (${percentage} %)`;
 
+    // Upravíme hlavičku tabulky na webu, aby obsahovala Čas
+    const tableContainer = document.querySelector('.results-table');
+    tableContainer.innerHTML = `
+        <thead>
+            <tr>
+                <th>Otázka</th>
+                <th>Odpověď žáka</th>
+                <th>Správná odpověď</th>
+                <th>Čas</th>
+            </tr>
+        </thead>
+        <tbody id="results-table-body"></tbody>
+    `;
+
     const tableBody = document.getElementById('results-table-body');
     const dynamicFields = document.getElementById('dynamic-form-fields');
     
-    // Nastavení předmětu e-mailu
     document.getElementById('email-subject').value = `Výsledky testu - ${studentName} (${score}/${quizData.length})`;
 
-    // Vyčištění starého obsahu
     tableBody.innerHTML = "";
     dynamicFields.innerHTML = "";
 
-    // Přidání základních údajů do e-mailového formuláře
     addHiddenField("Jméno žáka", studentName);
     addHiddenField("Celkové skóre", `${score} z ${quizData.length} (${percentage} %)`);
 
-    // Procházení výsledků, tvorba tabulky na webu a polí pro e-mail
     studentReport.forEach((item, index) => {
         const row = document.createElement('tr');
         if (item.status === 'correct') row.className = 'correct-row';
@@ -355,21 +369,21 @@ function finishQuiz() {
             <td>${item.question}</td>
             <td>${item.userAnswer}</td>
             <td>${item.correctAnswer}</td>
+            <td>${item.timeSpent}</td>
         `;
         tableBody.appendChild(row);
 
-        // Zápis do e-mailového formuláře (FormSubmit vytvoří tabulku)
-        addHiddenField(`Otázka ${index + 1}: ${item.question}`, `Odpověď: ${item.userAnswer} | Správná: ${item.correctAnswer}`);
+        // Do e-mailu posíláme přehledný textový zápis včetně času a celých odpovědí
+        addHiddenField(
+            `Otázka ${index + 1}: ${item.question}`, 
+            `Odpověď žáka: [ ${item.userAnswer} ] | Správná: [ ${item.correctAnswer} ] | Čas: ${item.timeSpent}`
+        );
     });
 
-    // Cíl odeslání nastaven přímo na Váš e-mail přes FormSubmit
-    // Systém blokuje přímé odkazy, proto adresu poskládáme z kousků
     const protokol = "https://";
     const domena = "formsubmit.co";
     const typ = "/ajax/";
     const schranka = "ivanekrazit" + "@" + "gmail.com";
-    
-    // Výsledná adresa: https://formsubmit.co
     const kompletniAdresa = protokol + domena + typ + schranka;
 
     const form = document.getElementById('formsubmit-form');
