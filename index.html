@@ -179,6 +179,8 @@
     <div id="dynamic-form-fields"></div>
 </form>
 
+<script>
+// Opravená pole – nyní jsou prázdná a připravená na data
 let quizData = [];
 let currentIdx = 0;
 let score = 0;
@@ -279,8 +281,6 @@ function showQuestion() {
 
 function handleTimeout() {
     const q = quizData[currentIdx];
-    
-    // Zjistíme text správné odpovědi
     let correctText = q.correct === 'A' ? q.a : (q.correct === 'B' ? q.b : q.c);
 
     studentReport.push({
@@ -303,12 +303,10 @@ function submitAnswer() {
 
     clearInterval(timerInterval);
     const q = quizData[currentIdx];
-    const answerLetter = selected.value; // A, B, C
+    const answerLetter = selected.value;
     
-    // Spočítáme spotřebovaný čas (20 - zbývající čas)
     let timeSpent = (20 - timeLeft) + " s";
 
-    // Převedeme písmena na konkrétní texty odpovědí
     let userText = answerLetter === 'A' ? q.a : (answerLetter === 'B' ? q.b : q.c);
     let correctText = q.correct === 'A' ? q.a : (q.correct === 'B' ? q.b : q.c);
 
@@ -334,7 +332,6 @@ function finishQuiz() {
     const percentage = Math.round((score / quizData.length) * 100);
     document.getElementById('summary-text').innerHTML = `Žák: <strong>${studentName}</strong><br>Skóre: <strong>${score} z ${quizData.length}</strong> (${percentage} %)`;
 
-    // Upravíme hlavičku tabulky na webu, aby obsahovala Čas
     const tableContainer = document.querySelector('.results-table');
     tableContainer.innerHTML = `
         <thead>
@@ -373,7 +370,6 @@ function finishQuiz() {
         `;
         tableBody.appendChild(row);
 
-        // Do e-mailu posíláme přehledný textový zápis včetně času a celých odpovědí
         addHiddenField(
             `Otázka ${index + 1}: ${item.question}`, 
             `Odpověď žáka: [ ${item.userAnswer} ] | Správná: [ ${item.correctAnswer} ] | Čas: ${item.timeSpent}`
@@ -416,3 +412,5 @@ function addHiddenField(name, value) {
 </script>
 </body>
 </html>
+
+    
