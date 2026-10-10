@@ -9,7 +9,7 @@ Který program není antivirový?;AVG;Avast;Skype;C
 Který program není internetový prohlížeč?;Acrobat reader;Opera;Chrome;A
 Kolik bitů má 1 Byte?;10;8;16;B
 Kolik Bytů má 1 kB?;1000;100;1024;C
-Která přípona patří zvukovému souboru?;.avi;.wav;.png;B
+Která přípona patří zvukovému souboru?;.arj;.wav;.png;B
 Která přípona patří obrázku?;.bmp;.mp4;.obr;A
 Která přípona nepatří textovému souboru?;.log;.txt;.rar;C
 Která přípona patří textovému dokumentu?;.arj;.docx;.png;B
@@ -21,14 +21,14 @@ Která přípona nepatří obrázku?;.mp3;.jpg;.gif;A
 Která přípona nepatří filmu?;.mp4;.mp3;.mkv;B
 Které z uvedených není hardware?;procesor;monitor;soubor;C
 Která přípona nepatří zvukovému souboru?;.gif;.wav;.mp3;A
-K čemu můžeme přirovnat procesor v počítač?;mozek;srdce;játra;A
+K čemu můžeme přirovnat procesor v počítači?;mozek;srdce;játra;A
 Které z uvedených slouží pro trvalé uložení dat?;RAM;Hardisk;CPU;B
 Které z uvedených je operační systém?;Chrome;Avast;Linux;C
 Které z uvedených není operační systém;Windows;Linux;Winrar;C
 Který program není internetový prohlížeč?;Chrome;AVG;Firefox;B
 Jaká klávesová zkratka se používá pro zkopírování označeného textu?;Ctrl+C;Ctrl+X;Ctrl+V;A
 Jaká klávesová zkratka se používá pro vyjmutí označeného textu?;Ctrl+C;Ctrl+X;Ctrl+V;B 
-Jaká klávesová zkratka se používá pro vložení označeného textu?;Ctrl+C;Ctrl+X;Ctrl+V;C
+Jaká klávesová zkratka se používá pro vložení zkopírovaného textu?;Ctrl+C;Ctrl+X;Ctrl+V;C
 Která klávesová zkratka vrátí poslední provedenou akci zpět?;Ctrl+Z;Ctrl+B;Ctrl+A;A
 Který z uvedených programů je programovací jazyk určený pro výuku dětí?;C++;Scratch;Python;B
 Který z uvedených není programovací jazyk?;Word;Python;C++;A
