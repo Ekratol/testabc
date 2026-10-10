@@ -3,351 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Příprava testu</title>
+    <title>Školní Test</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
-            margin: 0;
+            color: #333;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            margin: 0;
         }
-
-        .card {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .quiz-container {
+            max-width: 700px;
+            margin: 20px auto;
+            background: #fff;
             padding: 30px;
-            width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
-            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-
         h1, h2 {
-            color: #333333;
-            margin-top: 0;
-            margin-bottom: 20px;
+            text-align: center;
+            color: #1a2a3a;
         }
-
-        label {
-            display: block;
-            text-align: left;
-            margin-bottom: 8px;
-            color: #555555;
-        }
-
-        .setup-input {
-            width: 100%;
-            padding: 10px 12px;
-            margin-bottom: 20px;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        button {
-            width: 100%;
-            background-color: #0066cc;
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: #004c99;
-        }
-
-        #quiz-container {
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            padding: 30px;
-            width: 100%;
-            max-width: 600px;
-            box-sizing: border-box;
-        }
-
-        /* Nové styly pro otázky v testu */
-        .otazka-blok {
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eeeeee;
-            text-align: left;
-        }
-
-        .otazka-text {
-            font-weight: bold;
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #222;
-        }
-
-        .moznost-label {
+        .meta-info {
             display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 6px;
         }
-
-        .moznost-label:hover {
+        .timer {
+            color: #e74c3c;
+        }
+        .question {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .answers {
+            list-style: none;
+            padding: 0;
+        }
+        .answers li {
+            margin-bottom: 12px;
+        }
+        .answers label {
+            display: block;
+            padding: 14px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .answers label:hover {
+            background: #e9ecef;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+        input[type="radio"]:checked + label {
+            background: #0d6efd;
+            color: #fff;
+            border-color: #0b5ed7;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #198754;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #157347;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .results-table th, .results-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
+        }
+        .results-table th {
             background-color: #e9ecef;
         }
-
-        .moznost-label input {
-            margin-right: 10px;
-        }
-
-        .vysledek-box {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            text-align: center;
-        }
+        .correct-row { background-color: #d1e7dd; }
+        .wrong-row { background-color: #f8d7da; }
+        .timeout-row { background-color: #fff3cd; }
     </style>
 </head>
 <body>
 
-    <!-- 1. KROK: Identifikace žáka -->
-    <div id="setup-card" class="card">
-        <h1>Příprava testu</h1>
-        <label for="student-name"><strong>Jméno a příjmení žáka:</strong></label>
-        <input type="text" id="student-name" class="setup-input" placeholder="Např. Jan Novák">
-        <button id="start-btn">Spustit test</button>
+<div class="quiz-container">
+    <!-- FÁZE 0: Přihlášení žáka -->
+    <div id="login-screen">
+        <h1>Vítejte v testu</h1>
+        <div class="input-group">
+            <label for="student-name">Jméno a příjmení žáka:</label>
+            <input type="text" id="student-name" placeholder="Např. Jan Novák">
+        </div>
+        <button class="btn" onclick="startQuiz()">Spustit test</button>
     </div>
 
-    <!-- Místo pro zobrazení testu -->
-    <div id="quiz-container" style="display:none;"></div>
+    <!-- FÁZE 1: Průběh testu -->
+    <div id="quiz-screen" style="display: none;">
+        <div class="meta-info">
+            <span id="progress-text">Otázka 1 z X</span>
+            <span class="timer">Čas: <span id="time-left">20</span> s</span>
+        </div>
+        <div class="question" id="question-text">Načítání...</div>
+        <ul class="answers">
+            <li>
+                <input type="radio" id="ansA" name="quiz-choice" value="A">
+                <label for="ansA" id="labelA"></label>
+            </li>
+            <li>
+                <input type="radio" id="ansB" name="quiz-choice" value="B">
+                <label for="ansB" id="labelB"></label>
+            </li>
+            <li>
+                <input type="radio" id="ansC" name="quiz-choice" value="C">
+                <label for="ansC" id="labelC"></label>
+            </li>
+        </ul>
+        <button class="btn" onclick="submitAnswer()">Potvrdit odpověď</button>
+    </div>
+
+    <!-- FÁZE 2: Výsledky -->
+    <div id="result-screen" style="display: none;">
+        <h2>Výsledky testu</h2>
+        <div id="summary-text" style="font-size: 1.2rem; margin-bottom: 20px; text-align: center;"></div>
+        
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Otázka</th>
+                    <th>Vaše odpověď</th>
+                    <th>Správná</th>
+                </tr>
+            </thead>
+            <tbody id="results-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Skrytý formulář pro odeslání dat přes FormSubmit -->
+<form id="formsubmit-form" action="https://formsubmit.co" method="POST" style="display: none;">
+    <input type="hidden" name="_subject" id="email-subject" value="Výsledky testu">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_template" value="table">
+    <div id="dynamic-form-fields"></div>
+</form>
 
 <script>
-// ================= KONFIGURACE TESTU =================
-const CAS_NA_OTAZKU_SEKUNDY = 20; // 20 sekund na každou otázku
-// =====================================================
+let quizData = [];
+let currentIdx = 0;
+let score = 0;
+let timerInterval = null;
+let timeLeft = 20;
+let studentName = "";
+let studentReport = [];
 
-let globalniOtazky = [];
-let aktualniIndex = 0;
-let jmenoZaka = "";
-let odpovediZaka = [];
+// Funkce pro náhodné zamíchání pole (Fisher-Yates)
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
 
-let zbyvajiciCasOtazky = CAS_NA_OTAZKU_SEKUNDY;
-let casovacInterval = null;
+// Načtení otázek ze souboru otazky.txt ve stejné složce
+async function loadQuestions() {
+    try {
+        const response = await fetch('otazky.txt');
+        if (!response.ok) throw new Error('Nepodařilo se načíst soubor otazky.txt');
+        const text = await response.text();
+        
+        const lines = text.split('\n');
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return;
+            
+            const parts = trimmed.split(';');
+            if (parts.length >= 5) {
+                quizData.push({
+                    question: parts[0],
+                    a: parts[1],
+                    b: parts[2],
+                    c: parts[3],
+                    correct: parts[4].trim().toUpperCase()
+                });
+            }
+        });
 
-document.getElementById('start-btn').addEventListener('click', async function() {
-    const studentName = document.getElementById('student-name').value.trim();
-    if (!studentName) {
-        alert('Prosím, zadejte jméno žáka.');
+        // Zamíchání otázek na začátku
+        shuffle(quizData);
+    } catch (error) {
+        alert('Chyba při načítání otázek: ' + error.message);
+    }
+}
+
+// Spuštění testu po zadání jména
+async function startQuiz() {
+    const nameInput = document.getElementById('student-name').value.trim();
+    if (!nameInput) {
+        alert('Zadejte prosím své jméno!');
+        return;
+    }
+    studentName = nameInput;
+
+    await loadQuestions();
+
+    if (quizData.length === 0) {
+        alert('Žádné otázky nebyly načteny. Zkontrolujte soubor otazky.txt.');
         return;
     }
 
-    try {
-        const response = await fetch('otazky.txt');
-        if (!response.ok) throw new Error(`Soubor otazky.txt nebyl nalezen.`);
-        
-        const textObsah = await response.text();
-        let otazky = zpracujStrednikovyFormat(textObsah);
-        
-        if (otazky.length === 0) {
-            alert("V souboru otazky.txt nebyly nalezeny žádné platné otázky.");
-            return;
-        }
-        
-        // Kompletní zamíchání otázek i odpovědí
-        zamichajPole(otazky);
-        otazky.forEach(otazka => zamichajPole(otazka.odpovedi));
-
-        // Inicializace stavu testu
-        globalniOtazky = otazky;
-        jmenoZaka = studentName;
-        aktualniIndex = 0;
-        odpovediZaka = new Array(otazky.length).fill(null);
-
-        document.getElementById('setup-card').style.display = 'none';
-        document.getElementById('quiz-container').style.display = 'block';
-
-        // Zobrazení první otázky a spuštění odpočtu
-        zobrazAktualniOtazku();
-
-    } catch (chyba) {
-        alert("Chyba: " + chyba.message);
-        console.error(chyba);
-    }
-});
-
-function zamichajPole(pole) {
-    for (let i = pole.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pole[i], pole[j]] = [pole[j], pole[i]];
-    }
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('quiz-screen').style.display = 'block';
+    
+    showQuestion();
 }
 
-function zpracujStrednikovyFormat(text) {
-    const radky = text.split('\n');
-    const vysledneOtazky = [];
-
-    radky.forEach(radek => {
-        const upravenyRadek = radek.trim();
-        if (!upravenyRadek) return;
-
-        const casti = upravenyRadek.split(';').map(c => c.trim());
-        if (casti.length < 5) return;
-
-        const textOtazky = casti;
-        const odpovedA = casti;
-        const odpovedB = casti;
-        const odpovedC = casti;
-        const spravnePismeno = casti.toUpperCase();
-
-        const odpovedi = [
-            { text: odpovedA, spravna: spravnePismeno === 'A' },
-            { text: odpovedB, spravna: spravnePismeno === 'B' },
-            { text: odpovedC, spravna: spravnePismeno === 'C' }
-        ];
-
-        vysledneOtazky.push({ otazka: textOtazky, odpovedi: odpovedi });
-    });
-
-    return vysledneOtazky;
-}
-
-// Nastartování odpočtu pro konkrétní otázku
-function spustCasovacOtazky() {
-    if (casovacInterval) clearInterval(casovacInterval);
+function showQuestion() {
+    clearInterval(timerInterval);
     
-    zbyvajiciCasOtazky = CAS_NA_OTAZKU_SEKUNDY;
+    if (currentIdx >= quizData.length) {
+        finishQuiz();
+        return;
+    }
+
+    // Reset výběru
+    const radios = document.getElementsByName('quiz-choice');
+    radios.forEach(r => r.checked = false);
+
+    document.getElementById('progress-text').innerText = `Otázka ${currentIdx + 1} z ${quizData.length}`;
     
-    casovacInterval = setInterval(() => {
-        zbyvajiciCasOtazky--;
+    const q = quizData[currentIdx];
+    document.getElementById('question-text').innerText = q.question;
+    document.getElementById('labelA').innerText = `A) ${q.a}`;
+    document.getElementById('labelB').innerText = `B) ${q.b}`;
+    document.getElementById('labelC').innerText = `C) ${q.c}`;
 
-        const elementCasu = document.getElementById('timer-display');
-        if (elementCasu) {
-            elementCasu.innerText = zbyvajiciCasOtazky + "s";
-            
-            // Varování, když zbývá méně než 5 sekund
-            if (zbyvajiciCasOtazky <= 5) {
-                elementCasu.style.color = 'red';
-                elementCasu.style.fontWeight = 'bold';
-            }
-        }
-
-        // Čas na otázku vypršel
-        if (zbyvajiciCasOtazky <= 0) {
-            clearInterval(casovacInterval);
-            posunNaDalsiNeboKonec(true); // Parametr true znamená, že vypršel čas
+    // Spuštění časovače na 20 sekund
+    timeLeft = 20;
+    document.getElementById('time-left').innerText = timeLeft;
+    
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('time-left').innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeout();
         }
     }, 1000);
 }
 
-function zobrazAktualniOtazku() {
-    const container = document.getElementById('quiz-container');
-    const polozka = globalniOtazky[aktualniIndex];
-    const jePosledni = aktualniIndex === globalniOtazky.length - 1;
+// Vypršení časového limitu
+function handleTimeout() {
+    const q = quizData[currentIdx];
+    studentReport.push({
+        question: q.question,
+        userAnswer: "Vypršel čas",
+        correctAnswer: q.correct,
+        status: "timeout"
+    });
+    currentIdx++;
+    showQuestion();
+}
 
-    let htmlObsah = `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; color: #666; font-size: 14px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-            <span><strong>Žák:</strong> ${jmenoZaka}</span>
-            <span><strong>Čas na otázku:</strong> <span id="timer-display">${zbyvajiciCasOtazky}s</span></span>
-            <span><strong>Otázka:</strong> ${aktualniIndex + 1} z ${globalniOtazky.length}</span>
-        </div>
-        
-        <div class="otazka-blok" style="border-bottom: none; margin-bottom: 15px;">
-            <div class="otazka-text">${polozka.otazka}</div>
-    `;
+// Potvrzení vybrané odpovědi žákem
+function submitAnswer() {
+    const selected = document.querySelector('input[name="quiz-choice"]:checked');
+    if (!selected) {
+        alert('Vyberte prosím jednu odpověď!');
+        return;
+    }
 
-    polozka.odpovedi.forEach((odpoved, indexOdpovedi) => {
-        htmlObsah += `
-            <label class="moznost-label">
-                <input type="radio" name="aktualni-otazka" value="${indexOdpovedi}">
-                ${odpoved.text}
-            </label>
+    clearInterval(timerInterval);
+    const q = quizData[currentIdx];
+    const answerValue = selected.value; // A, B nebo C
+
+    let isCorrect = (answerValue === q.correct);
+    if (isCorrect) score++;
+
+    studentReport.push({
+        question: q.question,
+        userAnswer: answerValue,
+        correctAnswer: q.correct,
+        status: isCorrect ? "correct" : "wrong"
+    });
+
+    currentIdx++;
+    showQuestion();
+}
+
+function finishQuiz() {
+    document.getElementById('quiz-screen').style.display = 'none';
+    document.getElementById('result-screen').style.display = 'block';
+
+    const percentage = Math.round((score / quizData.length) * 100);
+    document.getElementById('summary-text').innerHTML = `Žák: <strong>${studentName}</strong><br>Skóre: <strong>${score} z ${quizData.length}</strong> (${percentage} %)`;
+
+    const tableBody = document.getElementById('results-table-body');
+    const dynamicFields = document.getElementById('dynamic-form-fields');
+    
+    // Nastavení předmětu e-mailu
+    document.getElementById('email-subject').value = `Výsledky testu - ${studentName} (${score}/${quizData.length})`;
+
+    // Vyčištění starého obsahu
+    tableBody.innerHTML = "";
+    dynamicFields.innerHTML = "";
+
+    // Přidání základních údajů do e-mailového formuláře
+    addHiddenField("Jméno žáka", studentName);
+    addHiddenField("Celkové skóre", `${score} z ${quizData.length} (${percentage} %)`);
+
+    // Procházení výsledků, tvorba tabulky na webu a polí pro e-mail
+    studentReport.forEach((item, index) => {
+        const row = document.createElement('tr');
+        if (item.status === 'correct') row.className = 'correct-row';
+        else if (item.status === 'wrong') row.className = 'wrong-row';
+        else row.className = 'timeout-row';
+
+        row.innerHTML = `
+            <td>${item.question}</td>
+            <td>${item.userAnswer}</td>
+            <td>${item.correctAnswer}</td>
         `;
+        tableBody.appendChild(row);
+
+        // Zápis do e-mailového formuláře (FormSubmit vytvoří tabulku)
+        addHiddenField(`Otázka ${index + 1}: ${item.question}`, `Odpověď: ${item.userAnswer} | Správná: ${item.correctAnswer}`);
     });
 
-    htmlObsah += `</div>`;
+    // Cíl odeslání nastaven přímo na Váš e-mail přes FormSubmit
+    // Systém blokuje přímé odkazy, proto adresu poskládáme z kousků
+    const protokol = "https://";
+    const domena = "formsubmit.co";
+    const typ = "/ajax/";
+    const schranka = "ivanekrazit" + "@" + "gmail.com";
     
-    if (jePosledni) {
-        htmlObsah += `<button id="next-btn">Ukončit a vyhodnotit test</button>`;
-    } else {
-        htmlObsah += `<button id="next-btn">Potvrdit a další otázka</button>`;
-    }
+    // Výsledná adresa: https://formsubmit.co
+    const kompletniAdresa = protokol + domena + typ + schranka;
 
-    container.innerHTML = htmlObsah;
+    const form = document.getElementById('formsubmit-form');
+    const formData = new FormData(form);
 
-    // Spustíme odpočet na 20 sekund hned po vykreslení otázky
-    spustCasovacOtazky();
-
-    document.getElementById('next-btn').addEventListener('click', () => {
-        const zvolenaMoznost = document.querySelector('input[name="aktualni-otazka"]:checked');
-        
-        if (!zvolenaMoznost) {
-            alert("Prosím, vyberte jednu z odpovědí.");
-            return;
+    fetch(kompletniAdresa, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Accept': 'application/json'
         }
-
-        // Žák odpověděl včas, uložíme jeho volbu
-        odpovediZaka[aktualniIndex] = parseInt(zvolenaMoznost.value);
-        
-        clearInterval(casovacInterval);
-        posunNaDalsiNeboKonec(false);
+    }).then(response => {
+        if (response.ok) {
+            console.log('Výsledky odeslány.');
+        } else {
+            console.error('Chyba odeslání.');
+        }
+    }).catch(error => {
+        console.error('Chyba sítě:', error);
     });
 }
 
-// Logika pro přechod nebo ukončení testu
-function posunNaDalsiNeboKonec(vyprselCas) {
-    const jePosledni = aktualniIndex === globalniOtazky.length - 1;
-
-    if (vyprselCas) {
-        // Pokud vypršel čas, uložíme hodnotu null (žádná odpověď)
-        odpovediZaka[aktualniIndex] = null;
-    }
-
-    if (jePosledni) {
-        vyhodnotKonecnyTest();
-    } else {
-        aktualniIndex++;
-        zobrazAktualniOtazku();
-    }
-}
-
-function vyhodnotKonecnyTest() {
-    if (casovacInterval) clearInterval(casovacInterval);
-
-    let body = 0;
-    const celkemOtazek = globalniOtazky.length;
-
-    globalniOtazky.forEach((polozka, i) => {
-        const indexVolby = odpovediZaka[i];
-        if (indexVolby !== null && polozka.odpovedi[indexVolby].spravna) {
-            body++;
-        }
-    });
-
-    const procenta = Math.round((body / celkemOtazek) * 100);
-    const container = document.getElementById('quiz-container');
-    
-    container.innerHTML = `
-        <h2>Výsledky testu</h2>
-        <p><strong>Žák:</strong> ${jmenoZaka}</p>
-        <div class="vysledek-box" style="background-color: ${procenta >= 50 ? '#d4edda' : '#f8d7da'}; color: ${procenta >= 50 ? '#155724' : '#721c24'}; margin-top: 20px;">
-            Dosaženo: ${body} z ${celkemOtazek} bodů (${procenta} %)
-        </div>
-    `;
+function addHiddenField(name, value) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value;
+    document.getElementById('dynamic-form-fields').appendChild(input);
 }
 </script>
 </body>
