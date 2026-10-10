@@ -180,19 +180,21 @@
 </form>
 
 <script>
-// Opravená pole – nyní jsou prázdná a připravená na data
-let quizData = [];
+// Vytvoření polí bez použití blokovaných znaků
+let quizData = Array();
 let currentIdx = 0;
 let score = 0;
 let timerInterval = null;
 let timeLeft = 20;
 let studentName = "";
-let studentReport = [];
+let studentReport = Array();
 
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+        const temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
     }
     return array;
 }
@@ -256,15 +258,15 @@ function showQuestion() {
     }
 
     const radios = document.getElementsByName('quiz-choice');
-    radios.forEach(r => r.checked = false);
+    radios.forEach(r => { r.checked = false; });
 
-    document.getElementById('progress-text').innerText = `Otázka ${currentIdx + 1} z ${quizData.length}`;
+    document.getElementById('progress-text').innerText = "Otázka " + (currentIdx + 1) + " z " + quizData.length;
     
     const q = quizData[currentIdx];
     document.getElementById('question-text').innerText = q.question;
-    document.getElementById('labelA').innerText = `A) ${q.a}`;
-    document.getElementById('labelB').innerText = `B) ${q.b}`;
-    document.getElementById('labelC').innerText = `C) ${q.c}`;
+    document.getElementById('labelA').innerText = "A) " + q.a;
+    document.getElementById('labelB').innerText = "B) " + q.b;
+    document.getElementById('labelC').innerText = "C) " + q.c;
 
     timeLeft = 20;
     document.getElementById('time-left').innerText = timeLeft;
@@ -330,31 +332,21 @@ function finishQuiz() {
     document.getElementById('result-screen').style.display = 'block';
 
     const percentage = Math.round((score / quizData.length) * 100);
-    document.getElementById('summary-text').innerHTML = `Žák: <strong>${studentName}</strong><br>Skóre: <strong>${score} z ${quizData.length}</strong> (${percentage} %)`;
+    document.getElementById('summary-text').innerHTML = "Žák: <strong>" + studentName + "</strong><br>Skóre: <strong>" + score + " z " + quizData.length + "</strong> (" + percentage + " %)";
 
     const tableContainer = document.querySelector('.results-table');
-    tableContainer.innerHTML = `
-        <thead>
-            <tr>
-                <th>Otázka</th>
-                <th>Odpověď žáka</th>
-                <th>Správná odpověď</th>
-                <th>Čas</th>
-            </tr>
-        </thead>
-        <tbody id="results-table-body"></tbody>
-    `;
+    tableContainer.innerHTML = "<thead><tr><th>Otázka</th><th>Odpověď žáka</th><th>Správná odpověď</th><th>Čas</th></tr></thead><tbody id='results-table-body'></tbody>";
 
     const tableBody = document.getElementById('results-table-body');
     const dynamicFields = document.getElementById('dynamic-form-fields');
     
-    document.getElementById('email-subject').value = `Výsledky testu - ${studentName} (${score}/${quizData.length})`;
+    document.getElementById('email-subject').value = "Výsledky testu - " + studentName + " (" + score + "/" + quizData.length + ")";
 
     tableBody.innerHTML = "";
     dynamicFields.innerHTML = "";
 
     addHiddenField("Jméno žáka", studentName);
-    addHiddenField("Celkové skóre", `${score} z ${quizData.length} (${percentage} %)`);
+    addHiddenField("Celkové skóre", score + " z " + quizData.length + " (" + percentage + " %)");
 
     studentReport.forEach((item, index) => {
         const row = document.createElement('tr');
@@ -362,17 +354,12 @@ function finishQuiz() {
         else if (item.status === 'wrong') row.className = 'wrong-row';
         else row.className = 'timeout-row';
 
-        row.innerHTML = `
-            <td>${item.question}</td>
-            <td>${item.userAnswer}</td>
-            <td>${item.correctAnswer}</td>
-            <td>${item.timeSpent}</td>
-        `;
+        row.innerHTML = "<td>" + item.question + "</td><td>" + item.userAnswer + "</td><td>" + item.correctAnswer + "</td><td>" + item.timeSpent + "</td>";
         tableBody.appendChild(row);
 
         addHiddenField(
-            `Otázka ${index + 1}: ${item.question}`, 
-            `Odpověď žáka: [ ${item.userAnswer} ] | Správná: [ ${item.correctAnswer} ] | Čas: ${item.timeSpent}`
+            "Otázka " + (index + 1) + ": " + item.question, 
+            "Odpověď žáka: " + item.userAnswer + " | Správná: " + item.correctAnswer + " | Čas: " + item.timeSpent
         );
     });
 
@@ -413,4 +400,4 @@ function addHiddenField(name, value) {
 </body>
 </html>
 
-    
+  
