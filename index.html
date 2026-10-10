@@ -222,7 +222,12 @@ async function loadQuestions() {
             }
         });
 
+        // 1. Nejdříve všechny načtené otázky náhodně zamícháme
         shuffle(quizData);
+
+        // 2. Nyní vybereme pouze prvních 20 otázek
+        quizData = quizData.slice(0, 20);
+
     } catch (error) {
         alert('Chyba při načítání otázek: ' + error.message);
     }
